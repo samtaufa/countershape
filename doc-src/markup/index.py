@@ -2,7 +2,7 @@ import countershape
 from countershape import markup
 from countershape.doc import *
 
-this.markup = markup.Markdown(extras=["code-friendly"])
+this.markup = markup.Markdown( extras=["code-friendly"] )
 
 pages = [
             Page(

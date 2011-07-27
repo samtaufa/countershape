@@ -77,7 +77,7 @@ class uMarkdown(testpages.DummyState):
     def test_options(self):
         s = """__one__name@!this.name!@name"""
         t = countershape.template.Template(
-                markup.Markdown(extras=["code-friendly"]), 
+                markup.Markdown( extras=["code-friendly"] ), 
                 s, 
                 this=countershape.state.page
             )

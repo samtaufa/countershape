@@ -25,8 +25,11 @@ this.markup = markup.Markdown()
         <td>blog, doc, model</td>
         <td>Define the markdown class to use in rendering html from source file.
 <!--(block | syntax("py"))-->
-this.markup = markup.Markdown(extras=["code-friendly"])
+this.markup = markup.Markdown( extras=["code-friendly"] )
 <!--(end)-->
+
+Note: spacing is significant when specifying parameter options, such as 
+<strong>extras=["code-friendly"]</strong> above.
         </td>
     </tr>
     <tr><td>contentName</td>
@@ -108,7 +111,7 @@ import countershape
 from countershape import Page, Directory, PythonModule, markup
 from countershape.doc import *
           
-this.markup = markup.Markdown(extras=["code-friendly"])
+this.markup = markup.Markdown( extras=["code-friendly"] )
 
 this.layout = countershape.Layout( path="_layout.html" )
 this.titlePrefix = "Countershape "

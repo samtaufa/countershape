@@ -39,4 +39,4 @@ use:
 
 Options for the markdown2 command-line utility can be included such as:
 
-`this.markup = markup.Markdown(extras=["code-friendly"])`
+`this.markup = markup.Markdown( extras=["code-friendly"] )`

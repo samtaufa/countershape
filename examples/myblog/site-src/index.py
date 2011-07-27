@@ -2,7 +2,7 @@ import countershape
 from countershape import widgets, layout, markup, blog
 from countershape.doc import *
 this.site_url="http://foo"
-this.markup = markup.Markdown(extras=["code-friendly"])
+this.markup = markup.Markdown( extras=["code-friendly"] )
 
 ns.foot = "This is a footer"
 ns.head = "My Example Blog"

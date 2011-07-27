@@ -1,6 +1,21 @@
+Installation of Countershape is very straight forward, we install the 
+required dependencies, and any other optional feature we wish.
+
+-   Dependencies
+    -   TinyTree
+    -   CubicTemp
+-   Optional
+    - docutils
+    - markdown
+    - syntax highlighting (Pygments)
+-   Countershape
+-   Test Suite
+
 ## Dependencies
 
 ### TinyTree
+
+TinyTree is used to simplify the countershape data structures.
 
 <!--(block | syntax("bash"))-->
 $ git clone git://github.com/cortesi/tinytree.git
@@ -9,6 +24,8 @@ $ sudo setup.py install
 <!--(end)-->
 
 ### Cubictemp
+
+CubicTemp is the preferred templating system.
 
 <!--(block | syntax("bash"))-->
 $ git clone git://github.com/cortesi/cubictemp.git
@@ -19,6 +36,10 @@ $ sudo setup.py install
 ## Optional
 
 ### Text Markup Tools
+
+We do need to specify at least one markup tool for use in our
+website generation tool. Depending on which is your preferred
+non-html tool, then install either, or both.
 
 #### DOCUTILS
 

@@ -323,7 +323,7 @@ class HTMLPage(BasePage):
     defaultLayout = layout.Layout()
     structural = True
     def pageTitle(self, *args, **kwargs):
-        return self.title or self.name
+        return self._pageTitle or self.title or self.name
 
     def reset(self):
         self.header = Header(self)

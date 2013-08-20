@@ -1,9 +1,11 @@
 import datetime, os, shutil
+import tempfile
 import countershape
 import countershape.model as model
 import countershape.doc as doc
 import countershape.blog as blog
-import libpry
+import tutils
+
 
 class TestRoot(model.BaseRoot):
     contentName = "body"
@@ -23,7 +25,7 @@ class DummyBlog:
     postfixes = []
 
 
-class uPost(libpry.AutoTree):
+class TestPost:
     def setUp(self):
         self.post = self.getPost()
         self.post.postfix = TestPostfix()
@@ -32,7 +34,7 @@ class uPost(libpry.AutoTree):
         repr(self.post)
 
     def getPost(self):
-        return blog.Post("blogpages/testpost", DummyBlog())
+        return blog.Post(tutils.test_data.path("blogpages/testpost"), DummyBlog())
 
     def test_related(self):
         class Dummy:
@@ -40,7 +42,7 @@ class uPost(libpry.AutoTree):
                 self.id = id
                 self.tags = set(tags)
 
-        p = blog.Post("blogpages/testpost", DummyBlog())
+        p = blog.Post(tutils.test_data.path("blogpages/testpost"), DummyBlog())
         p.tags = set(["one", "two", "three"])
 
         r = p.related(
@@ -73,7 +75,7 @@ class uPost(libpry.AutoTree):
     def test_roundtrip(self):
         data = """
             my title
-            short: this is the 
+            short: this is the
             short description
             of this post
             time: 1977-11-24 14:05
@@ -103,7 +105,7 @@ class uPost(libpry.AutoTree):
 
         data = """
             my title
-            short: this is the 
+            short: this is the
             short description
             of this post
             time: 1977-11-24 14:05
@@ -114,7 +116,7 @@ class uPost(libpry.AutoTree):
             is
             data
         """
-        title, time, data, short, options, link, tags = blog.Post.fromStr(data)
+        title, time, data, short, options, link, tags, by = blog.Post.fromStr(data)
         check(title, time, data, short, options, tags)
 
         data = """
@@ -122,7 +124,7 @@ class uPost(libpry.AutoTree):
             time: 1977-11-24 14:05
             options: fullrss
             tags: one, two
-            short: this is the 
+            short: this is the
             short description
             of this post
 
@@ -130,7 +132,7 @@ class uPost(libpry.AutoTree):
             is
             data
         """
-        title, time, data, short, options, link, tags = blog.Post.fromStr(data)
+        title, time, data, short, options, link, tags, by = blog.Post.fromStr(data)
         check(title, time, data, short, options, tags)
 
 
@@ -139,7 +141,7 @@ class uPost(libpry.AutoTree):
             time: 1977-11-24 14:05
             options: fullrss
             tags: one, two
-            short: this is the 
+            short: this is the
             short description
             of this post
 
@@ -147,13 +149,13 @@ class uPost(libpry.AutoTree):
             is
             data
         """
-        title, time, data, short, options, link, tags = blog.Post.fromStr(data)
+        title, time, data, short, options, link, tags, by = blog.Post.fromStr(data)
         check(title, time, data, short, options, tags)
 
     def test_fromStr_err(self):
-        libpry.raises("not a valid post", blog.Post.fromStr, "")
-        libpry.raises("invalid metadata", blog.Post.fromStr, "title\nmetadata")
-        libpry.raises("invalid metadata", blog.Post.fromStr, "title\nmetadata: foo")
+        tutils.raises("not a valid post", blog.Post.fromStr, "")
+        tutils.raises("invalid metadata", blog.Post.fromStr, "title\nmetadata")
+        tutils.raises("invalid metadata", blog.Post.fromStr, "title\nmetadata: foo")
         data = """
             my title
             time: 1977-11-24 14:05
@@ -161,10 +163,10 @@ class uPost(libpry.AutoTree):
 
             data
         """
-        libpry.raises("invalid option", blog.Post.fromStr, data)
+        tutils.raises("invalid option", blog.Post.fromStr, data)
 
     def test_fromPath(self):
-        title, time, data, short, options, link, tags = blog.Post.fromPath("testblog/postone")
+        title, time, data, short, options, link, tags, by = blog.Post.fromPath(tutils.test_data.path("testblog/postone"))
         assert not tags
         assert title == "Title One"
         assert short == "multi\nline\nshort"
@@ -181,37 +183,45 @@ class uPost(libpry.AutoTree):
             self.post.short,
             self.post.options,
             self.post.url,
-            self.post.tags
+            self.post.tags,
+            self.post.by
         )
-        title, time, data, short, options, url, tags = blog.Post.fromStr(s)
+        title, time, data, short, options, url, tags, by = blog.Post.fromStr(s)
         assert self.post.short == short
         assert self.post.title == title
         assert self.post.time == time
         assert self.post.data == data
         assert self.post.tags == tags
+        assert self.post.by == by
 
     def test_toStr_noshort(self):
-        p = blog.Post("blogpages/testpost_noshort", DummyBlog())
-        title, time, data, short, options, url, tags = blog.Post.fromStr(p.toStr(
+        p = blog.Post(tutils.test_data.path("blogpages/testpost_noshort"), DummyBlog())
+        title, time, data, short, options, url, tags, by = blog.Post.fromStr(p.toStr(
             p.title,
             p.time,
             p.data,
             p.short,
             p.options,
             p.url,
-            p.tags
+            p.tags,
+            p.by
         ))
         assert p.short == short
         assert p.title == title
         assert p.time == time
         assert p.data == data
         assert p.tags == tags
+        assert p.by == by
 
 
-class uRewriteTests(libpry.AutoTree):
+class TestRewrite:
     def setUp(self):
-        self.bdir = os.path.join(self.tmpdir(), "blog")
-        shutil.copytree("testblog", self.bdir)
+        self.d = tempfile.mkdtemp()
+        self.bdir = os.path.join(self.d, "blog")
+        shutil.copytree(tutils.test_data.path("testblog"), self.bdir)
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
 
     def test_rewrite(self):
         post = blog.Post(os.path.join(self.bdir, "posthree"), DummyBlog())
@@ -221,26 +231,25 @@ class uRewriteTests(libpry.AutoTree):
         assert not post.changed
 
 
-class uBlogDirectory(libpry.AutoTree):
+class TestBlogDirectory:
     def test_init(self):
         a = doc.Doc(
                 TestRoot(
                     [
-                        blog.BlogDirectory("testblog", None, DummyBlog())
+                        blog.BlogDirectory(tutils.test_data.path("testblog"), None, DummyBlog())
                     ]
                 )
             )
         #a.root.dump()
 
 
-class uBlog(libpry.AutoTree):
+class TestBlog:
     def setUp(self):
         self.b = blog.Blog(
                     "Blog Title",
                     "blog description",
                     "posts",
-                    "testblog",
-                    blog.Disqus("test"),
+                    tutils.test_data.path("testblog"),
                     blog.RecentPosts(5, 5),
                 )
         r = TestRoot(
@@ -259,13 +268,14 @@ class uBlog(libpry.AutoTree):
         self.a._resetState()
 
     def test_invalid_blogdir(self):
-        libpry.raises(
+        tutils.raises(
             "not a directory", blog.Blog,
             "Title", "description", "http://foo", "nonexistent", "nonexistent"
         )
 
     def test_render(self):
-        self.a.render(self.tmpdir())
+        with tutils.tmpdir() as d:
+            self.a.render(d)
 
     def test_call(self):
         assert self.b()
@@ -302,7 +312,7 @@ class uBlog(libpry.AutoTree):
         repr(a)
 
 
-class uLinks(libpry.AutoTree):
+class TestLinks:
     def test_parse(self):
         txt = """
             http://test.org
@@ -339,12 +349,3 @@ class uLinks(libpry.AutoTree):
         e = l.parse(nobod)
         assert e[0]["body"] is None
 
-
-
-tests = [
-    uLinks(),
-    uPost(),
-    uBlogDirectory(),
-    uBlog(),
-    uRewriteTests(),
-]

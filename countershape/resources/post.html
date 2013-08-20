@@ -1,10 +1,16 @@
 <div class="post">
     <div class="posthead">
         <h1>$!title!$</h1>
-        <h2>@!posttime!@</h2>
+        <!--(block byblock)-->
+            <span class="by">@!by!@</span> wrote on
+        <!--(end)-->
+        $!byblock if by else ""!$
+        <span class="postdate">@!posttime!@</span>
     </div>
     <div class="postbody">
         $!postdata!$
+    </div>
+    <div class="postfooter">
         <!--(for item in postfixes)-->
         $!item!$
         <!--(end)-->

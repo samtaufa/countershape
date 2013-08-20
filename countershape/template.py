@@ -2,7 +2,6 @@ import cubictemp, tinytree
 import model, state, html, widgets
 
 
-
 class DummySyntax:
     def __init__(self, *args, **kwargs):
         pass
@@ -11,32 +10,13 @@ class DummySyntax:
         return "<pre>%s\n</pre>"%unicode(cubictemp.escape(txt))
 
 
-#begin nocover
 try:
     import pygments, pygments.lexers, pygments.formatters
     from pygments import highlight
     class Syntax:
-        lexerMap = dict(
-            py             = pygments.lexers.PythonLexer(),
-            py_traceback   = pygments.lexers.PythonTracebackLexer(),
-            css            = pygments.lexers.CssLexer(),
-            html           = pygments.lexers.HtmlLexer(),
-            js             = pygments.lexers.JavascriptLexer(),
-            c              = pygments.lexers.CLexer(),
-            xml            = pygments.lexers.XmlLexer(),
-            perl           = pygments.lexers.PerlLexer(),
-            php            = pygments.lexers.PhpLexer(),
-            bash           = pygments.lexers.BashLexer(),
-            apache         = pygments.lexers.ApacheConfLexer(),
-            squid          = pygments.lexers.SquidConfLexer(),
-        )
-        def __init__(self,
-                     lexer,
-                     style="native",
-                     linenostep=0,
-                     linenos=False,
-                     cssClass="highlight"):
-            self.lexer, self.style = self.lexerMap[lexer], style
+        def __init__(self, lexer, style="native", linenostep=0, linenos=False, cssClass="highlight"):
+            self.style = style
+            self.lexer = pygments.lexers.get_lexer_by_name(lexer)
             self.linenostep, self.linenos = linenostep, linenos
             self.cssClass = cssClass
 
@@ -58,8 +38,7 @@ try:
                 )
 except ImportError:
     Syntax = DummySyntax
-#end nocover
-    
+
 
 def cubescript(txt):
     txt = txt.replace("@_!", "@!")
@@ -72,6 +51,7 @@ def cubescript(txt):
 
 def _ns():
     return dict(
+        state               = state,
         linkTo              = model.LinkTo,
         aLink               = model.ALink,
         urlTo               = model.UrlTo,

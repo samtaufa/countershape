@@ -103,7 +103,7 @@ class _PostList(_Postfix):
     def _makeList(self, posts, num, title):
         monthyear = None
         output = html.DIV(_class=self.CSS_PREFIX)
-        output.addChild(html.H1(title))
+        output.addChild(html.H2(title))
         postlst = []
         for i in posts:
             if not num:
@@ -129,7 +129,7 @@ class _PostList(_Postfix):
         else:
             return ""
 
-    
+
 
 class RecentPosts(_PostList):
     """
@@ -169,27 +169,6 @@ class RecentPosts(_PostList):
         return html.DIV(*parts)
 
 
-class Disqus(_Postfix):
-    def __init__(self, account):
-        self.account = account
-
-    def index(self, page):
-        return html.rawstr(cubictemp.File(
-            utils.data.path("resources/disqus_index.html"),
-            account = self.account
-        ))
-
-    def inline(self, post):
-        return html.rawstr("<a href=\"%s#disqus_thread\">Comments</a>"%model.UrlTo(post))
-
-    def solo(self, post):
-        return html.rawstr(cubictemp.File(
-            utils.data.path("resources/disqus_solo.html"),
-            permalink = post.permalink,
-            account = self.account
-        ))
-
-
 class _PostRenderer(html._Renderable):
     """
         Lazy post renderer.
@@ -219,23 +198,24 @@ class _PostRenderer(html._Renderable):
             t = template.Template(
                 None,
                 file(utils.data.path("resources/post.html")).read(),
-                title = title, 
-                posttime = posttime, 
-                postdata = postbody, 
+                title = title,
+                posttime = posttime,
+                postdata = postbody,
+                by = self.post.by,
                 postfixes = [i() for i in postfixes]
                 )
 
             return unicode(t)
-        
+
 
 class Post(doc._DocHTMLPage):
     """
-        Each post is housed in a separate file, 
+        Each post is housed in a separate file,
 
-            First line is a multi-word title 
+            First line is a multi-word title
             Time: Time
 
-            The rest of the file is the post. 
+            The rest of the file is the post.
     """
     _TimeFmt = "%Y-%m-%d %H:%M"
     _metaRe = re.compile(r"(\w+):(.*)")
@@ -246,7 +226,7 @@ class Post(doc._DocHTMLPage):
             :time DateTime object - publication time
         """
         self.blog = blog
-        self.title, self.time, self.data, self.short, self.options, self.url, self.tags = self.fromPath(src)
+        self.title, self.time, self.data, self.short, self.options, self.url, self.tags, self.by = self.fromPath(src)
         if "draft" in self.options:
             self.structural = False
         name = os.path.splitext(os.path.basename(src))[0] + ".html"
@@ -296,6 +276,7 @@ class Post(doc._DocHTMLPage):
         options = set()
         tags = set()
         url = None
+        by = None
         for i in lines:
             i = i.strip()
             if not i:
@@ -309,6 +290,8 @@ class Post(doc._DocHTMLPage):
                 value = match.group(2)
                 if name.lower() == "time":
                     time = klass._timeFromStr(value)
+                elif name.lower() == "by":
+                    by = value.strip()
                 elif name.lower() == "url":
                     url = value.strip()
                 elif name.lower() == "short":
@@ -336,10 +319,10 @@ class Post(doc._DocHTMLPage):
         data = "\n".join(list(lines))
         if not title:
             raise ValueError("Not a valid post - no title found.")
-        return title, time, data, short, options, url, tags
+        return title, time, data, short, options, url, tags, by
 
     @classmethod
-    def toStr(klass, title, time, data, short, options, url, tags):
+    def toStr(klass, title, time, data, short, options, url, tags, by):
         """
             Return a string representation of this post.
         """
@@ -355,6 +338,8 @@ class Post(doc._DocHTMLPage):
             meta.append("tags: %s"%(",".join(tags)))
         if url:
             meta.append("url: %s"%url)
+        if by:
+            meta.append("by: %s"%by)
         meta += [
                 "",
                 data
@@ -373,7 +358,8 @@ class Post(doc._DocHTMLPage):
                 self.short,
                 self.options,
                 self.url,
-                self.tags
+                self.tags,
+                self.by
             )
         )
         f.close()
@@ -557,7 +543,7 @@ class Blog:
 
     def index(self, name, title, posts=10):
         return IndexPage(name, title, posts, self, *self.postfixes)
-        
+
     def archive(self, name, title):
         return ArchivePage(name, title, self)
 

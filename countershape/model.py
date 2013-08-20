@@ -8,7 +8,10 @@ import countershape, html, layout
 import utils, state
 
 
-class ApplicationError(Exception): pass
+class ApplicationError(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
+        self.page = state.page
 
 
 class UrlTo:
@@ -128,7 +131,7 @@ class BasePage(tinytree.Tree):
     """
         Objects inheriting from this class should over-ride the run() method,
         which will be called with the arguments of the page submission as
-        keywords. 
+        keywords.
     """
     # Name of page (possibly not unique)
     name = None
@@ -160,6 +163,12 @@ class BasePage(tinytree.Tree):
         sp = self.structuralPath()
         self.path = os.path.sep + (os.path.sep).join([i.name for i in sp])
 
+    def under(self, path):
+        p = state.application.getPage(path)
+        if p == self:
+            return True
+        return self.isDocDescendantOf(p)
+
     def structuralPath(self):
         """
             Retrieve a list of structural pages that lie on the path from the
@@ -178,15 +187,16 @@ class BasePage(tinytree.Tree):
         """
         pass
 
-    def matchPage(self, path, exact):
+    def match(self, path, exact):
         """
             Walk up the tree to see if we match the specified path.
 
-            path    :   A list of path elements, NOT including the name of the
-            current page. I.e. for a path foo/bar, this function would be
-            called on the page named "bar" with path argument ["foo"].
+            path:   A list of path elements, or a string path specification.
+
         """
-        sp = self.structuralPath()[:-1]
+        if isinstance(path, basestring):
+            path = [i for i in path.split(os.path.sep) if i]
+        sp = self.structuralPath()
         for j in reversed(path):
             if not sp:
                 return False
@@ -301,7 +311,7 @@ class Header(object):
         if meta != None:
             for k, v in meta.iteritems():
                 self.metaData(k, v)
-            
+
         for i in reversed(adds):
             self.path(i)
         return "\n".join(
@@ -386,16 +396,16 @@ class BaseApplication(object):
             Examples:
 
                 /foo       - A node named "foo" on the structural root.
-                
+
                 foo        - Any node named "foo". If there is more than one, this
                              will raise an Ambiguous Link error.
-                             
+
                 ./foo      - A descendant of the current page named foo.
-                
+
                 ^/foo      - An ancestor of the current page named foo.
-                
+
                 -/foo      - A sibling of the current page named foo.
-                
+
                 $/foo      - A page in the same subtree as the current page.
                              This means that the page is either a descendant,
                              or a sibling or an ancestor of the current page.
@@ -424,11 +434,10 @@ class BaseApplication(object):
             if any([isParent, isChild, isSibling, isLocal]) and not fromPage:
                 s = "Relative page link '%s' outside of page call context."%toPage
                 raise ApplicationError(s)
-            path = []
             path = [i for i in os.path.normpath(toPage).split(os.path.sep) if i and i != "."]
             if not path:
                 return self.root
-            pname = path.pop()
+            pname = path[-1]
             pagelist = self._pages.get(pname, None)
             if pagelist:
                 match = None
@@ -450,7 +459,7 @@ class BaseApplication(object):
                         ]
                         if not any(values):
                             continue
-                    if p.matchPage(path, exact):
+                    if p.match(path, exact):
                         if match:
                             raise ApplicationError(
                                     "Ambiguous path specification: %s."%toPage
@@ -463,7 +472,7 @@ class BaseApplication(object):
             s = "Invalid argument to getPage: %s."%repr(toPage) +\
                 " Must be either a string or a Page object."
             raise ApplicationError(s)
-    
+
     def getPath(self, path):
         """
             path        :   A list of path elements.
@@ -472,7 +481,7 @@ class BaseApplication(object):
             tuple which is the path "remainder". So, a request for /foo/bar/woo
             would result in a path argument of ["foo", "bar", "woo"]. If this
             matches a page "foo", the remainder will be ["bar", "woo"].
-            
+
             Always returns a page, or raises an error.
         """
         l = len(path)

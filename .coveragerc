@@ -1,0 +1,6 @@
+[rum]
+branch = True
+
+[report]
+omit = *rssgen*
+include = countershape/*

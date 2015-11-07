@@ -14,12 +14,16 @@ try:
     import pygments, pygments.lexers, pygments.formatters
     from pygments import highlight
     class Syntax:
-        def __init__(self, lexer, style="native", linenostep=0, linenos=False, cssClass="highlight"):
+        def __init__(self, lexer, style="native", linenostep=0, linenos=False, 
+                           linenostart=1, linenospecial=1, nobackground=False, 
+                           lineseparator="\n", lineanchors='', anchorlinenos=False, 
+                           cssClass="highlight"):
             self.style = style
             self.lexer = pygments.lexers.get_lexer_by_name(lexer)
-            self.linenostep, self.linenos = linenostep, linenos
+            self.linenostep, self.linenos, self.linenostart, = linenostep, linenos, linenostart
+            self.linenospecial, self.nobackground, self.lineseparator = linenospecial, nobackground, lineseparator
+            self.lineanchors, self.anchorlinenos = lineanchors, anchorlinenos
             self.cssClass = cssClass
-
         def __call__(self, txt):
             txt = txt.rstrip()
             fargs = dict(style=self.style)
@@ -27,6 +31,18 @@ try:
                 fargs["linenos"] = self.linenos
             if self.linenostep:
                 fargs["linenostep"] = self.linenostep
+            if self.linenostart:
+                fargs["linenostart"] = self.linenostart
+            if self.linenospecial:
+                fargs["linenospecial"] = self.linenospecial
+            if self.nobackground:
+                fargs["nobackground"] = self.nobackground
+            if self.lineseparator:
+                fargs["lineseparator"] = self.lineseparator
+            if self.lineanchors:
+                fargs["lineanchors"] = self.lineanchors
+            if self.anchorlinenos:
+                fargs["anchorlinenos"] = self.anchorlinenos
             if self.cssClass:
                 fargs["cssclass"] = self.cssClass
             return "%s\n"%unicode(
